@@ -7,7 +7,7 @@ public class Spaceship : MonoBehaviour{
     public GameObject[] Planets;
     public int simulationSpeed;
 
-    private Vector3 velocity = new Vector3(0.0095f, 0, 0);
+    private Vector3 velocity = new Vector3(0.0085f, 0, 0);
     private Vector3 force;
 
     public float mass = 420E+3f;
@@ -19,7 +19,7 @@ public class Spaceship : MonoBehaviour{
     private LineRenderer lineRenderer;
 
     public Vector3 angularMomentum;
-    public Vector3 nodeVector;
+    //public Vector3 nodeVector;
     private float µ;
     public float Energy;
     public Vector3 eccentricity;
@@ -32,28 +32,7 @@ public class Spaceship : MonoBehaviour{
     // Start is called before the first frame update
     void Start(){
 
-        this.transform.position = 1000000 * this.transform.position;
-        velocity = 1000000 * velocity;
-
-        µ = G * Planets[0].GetComponent<Planet>().mass;
-        angularMomentum = mass * Vector3.Cross(this.transform.position, velocity);
-        nodeVector = Vector3.Cross(new Vector3(0, 0, 1000000), angularMomentum/mass);
-        eccentricity = ((velocity.sqrMagnitude - (µ / this.transform.position.magnitude)) * this.transform.position - ((Vector3.Dot(this.transform.position, velocity)) * velocity)) / µ;
-        e = eccentricity.magnitude;
-        Energy = (velocity.sqrMagnitude / 2) - (µ / this.transform.position.magnitude);
-
-        circularPeri = angularMomentum.sqrMagnitude / (Mathf.Pow(mass, 2) * µ);
-        omega = Mathf.Atan2(eccentricity.y, eccentricity.x);
-
-        for(int i = 0; i<orbitPoints; i++) {
-            theta = (2 * Mathf.PI / 500) * i;
-            r = circularPeri * (1 / (1 + e * Mathf.Cos(theta - omega))); //TODO : add perigee
-            r = r / 1000000;
-            orbit[i] = new Vector3(r*Mathf.Cos(theta),r*Mathf.Sin(theta) , 0);
-		}
-
-        this.transform.position = this.transform.position/1000000;
-        velocity = velocity/1000000;
+        ComputeCurrentOrbit();
 
     }
 
@@ -74,16 +53,47 @@ public class Spaceship : MonoBehaviour{
                 force = force + (G * Planets[0].GetComponent<Planet>().mass * mass / Mathf.Pow(1000000000 * norme, 2)) * Force_unit;
 
             velocity = velocity + force * Time.deltaTime / mass;
-            move(velocity);
+            Move(velocity);
         }
 
         lineRenderer.SetPositions(orbit);
 
     }
 
-    void move(Vector3 velocity) {
+    void Move(Vector3 velocity) {
 
         this.transform.position = this.transform.position + (velocity*Time.deltaTime);
 
 	}
+
+    void ComputeCurrentOrbit() {
+
+        this.transform.position = 1000000 * this.transform.position;
+        velocity = 1000000 * velocity;
+
+        µ = G * Planets[0].GetComponent<Planet>().mass;
+        angularMomentum = mass * Vector3.Cross(this.transform.position, velocity);
+        //nodeVector = Vector3.Cross(new Vector3(0, 0, 1), angularMomentum/mass);
+        eccentricity = ((velocity.sqrMagnitude - (µ / this.transform.position.magnitude)) * this.transform.position - ((Vector3.Dot(this.transform.position, velocity)) * velocity)) / µ;
+        e = eccentricity.magnitude;
+        Energy = (velocity.sqrMagnitude / 2) - (µ / this.transform.position.magnitude);
+
+        circularPeri = angularMomentum.sqrMagnitude / (Mathf.Pow(mass, 2) * µ);
+        omega = Mathf.Atan2(eccentricity.y, eccentricity.x);
+
+        for (int i = 0; i < orbitPoints; i++) {
+            theta = (2 * Mathf.PI / 500) * i;
+            r = circularPeri * (1 / (1 + e * Mathf.Cos(theta - omega)));
+            r = r / 1000000;
+            if (r > Planets[0].GetComponent<Planet>().SOISize && i!=0) {
+                orbit[i] = new Vector3(r * Mathf.Cos(theta), r * Mathf.Sin(theta), -20);
+            } else {
+                orbit[i] = new Vector3(r * Mathf.Cos(theta), r * Mathf.Sin(theta), 1);
+            }
+        }
+
+        this.transform.position = this.transform.position / 1000000;
+        velocity = velocity / 1000000;
+
+    }
 }
