@@ -81,16 +81,31 @@ public class Spaceship : MonoBehaviour{
         circularPeri = angularMomentum.sqrMagnitude / (Mathf.Pow(mass, 2) * µ);
         omega = Mathf.Atan2(eccentricity.y, eccentricity.x);
 
+        bool hyperbola = false;
+
         for (int i = 0; i < orbitPoints; i++) {
             theta = (2 * Mathf.PI / 500) * i;
             r = circularPeri * (1 / (1 + e * Mathf.Cos(theta - omega)));
             r = r / 1000000;
-            if (r > Planets[0].GetComponent<Planet>().SOISize || r < 0) {
+            if (r > Planets[0].GetComponent<Planet>().SOISize) {
                 orbit[i] = new Vector3(r * Mathf.Cos(theta), r * Mathf.Sin(theta), -20);
+            } else if(r < 0){  //Hyperbole
+                orbit[i] = new Vector3(r * Mathf.Cos(theta), r * Mathf.Sin(theta), -20);
+                hyperbola = true;
             } else {
                 orbit[i] = new Vector3(r * Mathf.Cos(theta), r * Mathf.Sin(theta), 1);
             }
         }
+
+		if (hyperbola) {
+
+            for(int i = 0; i < orbitPoints; i++) {
+                if(orbit[i].z == -20) {
+                    orbit[i] = orbit[i - 1 % orbitPoints];
+				}
+			}
+
+		}
 
         this.transform.position = this.transform.position / 1000000;
         velocity = velocity / 1000000;

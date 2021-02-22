@@ -1521,7 +1521,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7218533817607413486, guid: 1b2ca6f7268193d43a5fca33b3f99e37, type: 3}
       propertyPath: SOISize
-      value: 1e+18
+      value: 925
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 1b2ca6f7268193d43a5fca33b3f99e37, type: 3}
