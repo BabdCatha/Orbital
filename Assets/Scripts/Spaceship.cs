@@ -7,7 +7,7 @@ public class Spaceship : MonoBehaviour{
     public GameObject[] Planets;
     public int simulationSpeed;
 
-    private Vector3 velocity = new Vector3(0.0085f, 0, 0);
+    private Vector3 velocity = new Vector3(0.013f, 0, 0);
     private Vector3 force;
 
     public float mass = 420E+3f;
@@ -85,7 +85,7 @@ public class Spaceship : MonoBehaviour{
             theta = (2 * Mathf.PI / 500) * i;
             r = circularPeri * (1 / (1 + e * Mathf.Cos(theta - omega)));
             r = r / 1000000;
-            if (r > Planets[0].GetComponent<Planet>().SOISize && i!=0) {
+            if (r > Planets[0].GetComponent<Planet>().SOISize || r < 0) {
                 orbit[i] = new Vector3(r * Mathf.Cos(theta), r * Mathf.Sin(theta), -20);
             } else {
                 orbit[i] = new Vector3(r * Mathf.Cos(theta), r * Mathf.Sin(theta), 1);
