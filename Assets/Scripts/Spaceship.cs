@@ -7,7 +7,7 @@ public class Spaceship : MonoBehaviour{
     public GameObject[] Planets;
     public int simulationSpeed;
 
-    private Vector3 velocity = new Vector3(0.0085f, 0, 0);
+    private Vector3 velocity = new Vector3(-0.0085f, 0, 0);
     private Vector3 force;
 
     public float mass = 420E+3f;
@@ -26,26 +26,51 @@ public class Spaceship : MonoBehaviour{
     private float e; //Magnitude of the eccentricity vector
     private float r;
     private float theta;
-    private float omega;
+    public float omega;
     private float circularPeri;
 
+    public float period;
+    public float timeSincePeriapsis;
+    private float Me;
+    private float a;
+    private float E;
+    private float rayon;
+
+    public int iteration = 0;
+
     private delegate float Function(float E);
+
+    private Function f;
+    private Function df;
 
     // Start is called before the first frame update
     void Start(){
 
         ComputeCurrentOrbit();
-        Function f = Kepler;
-        Function df = dKepler;
+        f = Kepler;
+        df = dKepler;
+        lineRenderer = GetComponent<LineRenderer>();
+        timeSincePeriapsis = 0;
 
     }
 
     // Update is called once per frame
     void Update(){
 
-        LineRenderer lineRenderer = GetComponent<LineRenderer>();
+        timeSincePeriapsis = (timeSincePeriapsis + simulationSpeed*Time.deltaTime) % period;
 
-        for (int j = 0; j < simulationSpeed; j++) {
+        Me = 2 * Mathf.PI * timeSincePeriapsis / period;
+
+        E = Newton(Me, e, f, df, 1e-6f);
+
+        theta = 2 * Mathf.Atan(Mathf.Sqrt((1 + e) / (1 - e)) * Mathf.Tan(E / 2));
+
+        rayon = circularPeri * (1 / (1 + e * Mathf.Cos(theta)));
+        rayon = rayon / 1000000;
+
+        this.transform.position = new Vector3(rayon * Mathf.Cos(theta+omega), rayon * Mathf.Sin(theta+omega), 0);
+
+        /*for (int j = 0; j < simulationSpeed; j++) {
 
             force = new Vector3(0, 0, 0);
 
@@ -58,7 +83,7 @@ public class Spaceship : MonoBehaviour{
 
             velocity = velocity + force * Time.deltaTime / mass;
             Move(velocity);
-        }
+        }*/
 
         lineRenderer.SetPositions(orbit);
 
@@ -86,6 +111,11 @@ public class Spaceship : MonoBehaviour{
         omega = Mathf.Atan2(eccentricity.y, eccentricity.x);
 
         bool hyperbola = false;
+
+        if (e < 1) {
+            a = -µ / (2 * Energy);
+            period = 2 * Mathf.PI * Mathf.Sqrt(Mathf.Pow(a, 3) / µ);
+        }
 
         for (int i = 0; i < orbitPoints; i++) {
             theta = (2 * Mathf.PI / 500) * i;
@@ -121,25 +151,27 @@ public class Spaceship : MonoBehaviour{
 	}
 
     float dKepler(float E) {
-        return 1 - Mathf.Cos(E);
+        return 1 - e * Mathf.Cos(E);
 	}
 
     float Newton(float Me, float e, Function f, Function df, float tolerance) {
 
-        float E;
+        float Em = 0;
 
         if(Me < Mathf.PI) {
-            E = Me + e / 2;
+            Em = Me + (e / 2);
 		} else {
-            E = Me - e / 2;
+            Em = Me - (e / 2);
 		}
         float ratio = 10;
-        while(ratio < tolerance) {
-            ratio = (f(E) - Me) / df(E);
-            E = E - ratio;
+        iteration = 0;
+        while(Mathf.Abs(ratio) > tolerance && iteration < 10000) {
+            ratio = (f(Em) - Me) / df(Em);
+            Em = Em - ratio;
+            iteration++;
 		}
 
-        return E;
+        return Em;
 
 	}
 }

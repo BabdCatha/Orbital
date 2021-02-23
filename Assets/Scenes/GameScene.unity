@@ -239,7 +239,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Planets:
   - {fileID: 1352232040}
-  simulationSpeed: 2500
+  simulationSpeed: 500
   mass: 420000
   orbitPoints: 500
   orbit:
@@ -744,13 +744,10 @@ MonoBehaviour:
   - {x: 0, y: 0, z: 0}
   - {x: 0, y: 0, z: 0}
   angularMomentum: {x: 0, y: 0, z: 0}
-  Energy: 0
-  eccentricity: {x: 0, y: 0, z: 0}
-  e: 0
-  r: 0
-  theta: 0
   omega: 0
-  circularPeri: 0
+  period: 0
+  timeSincePeriapsis: 0
+  iteration: 0
 --- !u!212 &354956930
 SpriteRenderer:
   m_ObjectHideFlags: 0
