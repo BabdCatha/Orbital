@@ -7,7 +7,7 @@ public class Spaceship : MonoBehaviour{
     public GameObject[] Planets;
     public int simulationSpeed;
 
-    private Vector3 velocity = new Vector3(0.013f, 0, 0);
+    private Vector3 velocity = new Vector3(0.0085f, 0, 0);
     private Vector3 force;
 
     public float mass = 420E+3f;
@@ -21,18 +21,22 @@ public class Spaceship : MonoBehaviour{
     public Vector3 angularMomentum;
     //public Vector3 nodeVector;
     private float µ;
-    public float Energy;
-    public Vector3 eccentricity;
-    public float e; //Magnitude of the eccentricity vector
-    public float r;
-    public float theta;
-    public float omega;
-    public float circularPeri;
+    private float Energy;
+    private Vector3 eccentricity;
+    private float e; //Magnitude of the eccentricity vector
+    private float r;
+    private float theta;
+    private float omega;
+    private float circularPeri;
+
+    private delegate float Function(float E);
 
     // Start is called before the first frame update
     void Start(){
 
         ComputeCurrentOrbit();
+        Function f = Kepler;
+        Function df = dKepler;
 
     }
 
@@ -111,4 +115,31 @@ public class Spaceship : MonoBehaviour{
         velocity = velocity / 1000000;
 
     }
+
+    float Kepler(float E) {
+        return E - e * Mathf.Sin(E);
+	}
+
+    float dKepler(float E) {
+        return 1 - Mathf.Cos(E);
+	}
+
+    float Newton(float Me, float e, Function f, Function df, float tolerance) {
+
+        float E;
+
+        if(Me < Mathf.PI) {
+            E = Me + e / 2;
+		} else {
+            E = Me - e / 2;
+		}
+        float ratio = 10;
+        while(ratio < tolerance) {
+            ratio = (f(E) - Me) / df(E);
+            E = E - ratio;
+		}
+
+        return E;
+
+	}
 }
