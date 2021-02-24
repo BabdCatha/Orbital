@@ -7,7 +7,7 @@ public class Spaceship : MonoBehaviour{
     public GameObject[] Planets;
     public int simulationSpeed;
 
-    private Vector3 velocity = new Vector3(-0.0085f, 0, 0);
+    private Vector3 velocity = new Vector3(0.0085f, 0, 0);
     private Vector3 force;
 
     public float mass = 420E+3f;
@@ -59,11 +59,21 @@ public class Spaceship : MonoBehaviour{
 
         timeSincePeriapsis = (timeSincePeriapsis + simulationSpeed*Time.deltaTime) % period;
 
-        Me = 2 * Mathf.PI * timeSincePeriapsis / period;
+        if (e < 1) {
+            Me = 2 * Mathf.PI * timeSincePeriapsis / period;
 
-        E = Newton(Me, e, f, df, 1e-6f);
+            E = Newton(Me, e, f, df, 1e-6f);
 
-        theta = 2 * Mathf.Atan(Mathf.Sqrt((1 + e) / (1 - e)) * Mathf.Tan(E / 2));
+            theta = 2 * Mathf.Atan(Mathf.Sqrt((1 + e) / (1 - e)) * Mathf.Tan(E / 2));
+
+        }else if(e == 1) {
+            Me = Mathf.Pow(µ, 2) * timeSincePeriapsis / (Mathf.Pow(angularMomentum.magnitude, 3));
+            theta = (Mathf.Pow(3 * Me + Mathf.Sqrt(Mathf.Pow(3 * Me, 2) + 1), 1 / 3)) - (Mathf.Pow(3 * Me + Mathf.Sqrt(Mathf.Pow(3 * Me, 2) + 1), -1 / 3));
+		}
+
+        if (angularMomentum.z < 0) {
+            theta = -theta;
+        }
 
         rayon = circularPeri * (1 / (1 + e * Mathf.Cos(theta)));
         rayon = rayon / 1000000;
@@ -110,8 +120,6 @@ public class Spaceship : MonoBehaviour{
         circularPeri = angularMomentum.sqrMagnitude / (Mathf.Pow(mass, 2) * µ);
         omega = Mathf.Atan2(eccentricity.y, eccentricity.x);
 
-        bool hyperbola = false;
-
         if (e < 1) {
             a = -µ / (2 * Energy);
             period = 2 * Mathf.PI * Mathf.Sqrt(Mathf.Pow(a, 3) / µ);
@@ -125,13 +133,12 @@ public class Spaceship : MonoBehaviour{
                 orbit[i] = new Vector3(r * Mathf.Cos(theta), r * Mathf.Sin(theta), -20);
             } else if(r < 0){  //Hyperbole
                 orbit[i] = new Vector3(r * Mathf.Cos(theta), r * Mathf.Sin(theta), -20);
-                hyperbola = true;
             } else {
                 orbit[i] = new Vector3(r * Mathf.Cos(theta), r * Mathf.Sin(theta), 1);
             }
         }
 
-		if (hyperbola) {
+		if (e > 1) {
 
             for(int i = 0; i < orbitPoints; i++) {
                 if(orbit[i].z == -20) {
