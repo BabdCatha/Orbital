@@ -7,7 +7,7 @@ public class Spaceship : MonoBehaviour{
     public GameObject[] Planets;
     public int simulationSpeed;
 
-    private Vector3 velocity = new Vector3(0.0085f, 0, 0);
+    private Vector3 velocity = new Vector3(-0.01f, 0, 0);
     private Vector3 force;
 
     public float mass = 420E+3f;
@@ -47,8 +47,6 @@ public class Spaceship : MonoBehaviour{
     void Start(){
 
         ComputeCurrentOrbit();
-        f = Kepler;
-        df = dKepler;
         lineRenderer = GetComponent<LineRenderer>();
         timeSincePeriapsis = 0;
 
@@ -61,14 +59,20 @@ public class Spaceship : MonoBehaviour{
 
         if (e < 1) {
             Me = 2 * Mathf.PI * timeSincePeriapsis / period;
-
+            f = Kepler;
+            df = dKepler;
             E = Newton(Me, e, f, df, 1e-6f);
-
             theta = 2 * Mathf.Atan(Mathf.Sqrt((1 + e) / (1 - e)) * Mathf.Tan(E / 2));
 
         }else if(e == 1) {
             Me = Mathf.Pow(µ, 2) * timeSincePeriapsis / (Mathf.Pow(angularMomentum.magnitude, 3));
             theta = (Mathf.Pow(3 * Me + Mathf.Sqrt(Mathf.Pow(3 * Me, 2) + 1), 1 / 3)) - (Mathf.Pow(3 * Me + Mathf.Sqrt(Mathf.Pow(3 * Me, 2) + 1), -1 / 3));
+		} else {
+            Me = Mathf.Pow(µ, 2) * Mathf.Pow((Mathf.Pow(e, 2) - 1), 3 / 2f) * timeSincePeriapsis / Mathf.Pow(angularMomentum.magnitude, 3);
+            f = hKepler;
+            df = hdKepler;
+            E = Newton(Me, e, f, df, 1e-6f);
+            theta = Mathf.Acos(((float)System.Math.Cosh(E) - e) / (1 - e * (float)System.Math.Cosh(E)));
 		}
 
         if (angularMomentum.z < 0) {
@@ -159,6 +163,14 @@ public class Spaceship : MonoBehaviour{
 
     float dKepler(float E) {
         return 1 - e * Mathf.Cos(E);
+	}
+
+    float hKepler(float E) {
+        return e * (float)System.Math.Sinh(E) - E;
+	}
+
+    float hdKepler(float E) {
+        return e * (float)System.Math.Cosh(E) - 1;
 	}
 
     float Newton(float Me, float e, Function f, Function df, float tolerance) {
